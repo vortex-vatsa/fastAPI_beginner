@@ -1,0 +1,32 @@
+cat > .gitignore << 'EOF'
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment - Very Important
+fastapienv/
+venv/
+env/
+ENV/
+.venv/
+pyvenv.cfg
+
+# IDE and Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Testing and coverage
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+EOF
