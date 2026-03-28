@@ -1,0 +1,14 @@
+# .gitignore file for a FastAPI project 
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.venv/
+.vscode/
+.idea/
+*.log
+.DS_Store
