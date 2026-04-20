@@ -24,7 +24,7 @@ def get_all_books(book_title: str):
     return [book for book in BOOKS if book["title"].casefold() == book_title.casefold()]
 
 
-@app.get("/books/{author_name}/")
+@app.get("/books/{author_name}")
 def get_books_by_author(category: str, author_name: str):
     books_to_return = []
     for book in BOOKS:
@@ -58,11 +58,12 @@ def update_book(updated_book = Body()):
             return book
     return {"message": f"Book with title {updated_book['title']} not found."}    
 
-
+# search by path parameter
 @app.get("/books/books_by_author/{author_name}")
 def get_books_by_author(author_name: str):
     return [book for book in BOOKS if book["author"].casefold() == author_name.casefold()]
 
-@app.get("/books/booksbyauthor/")
+#  search by query parameter
+@app.get("/books/books_by_author/")
 def get_books_by_author(author_name: str):
     return [book for book in BOOKS if book["author"].casefold() == author_name.casefold()] 
