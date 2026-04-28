@@ -22,14 +22,24 @@ class Book:
         self.rating = rating
 
 class BookRequest(BaseModel):
-    id: Optional[int] = None
+    id: Optional[int] = Field(description="Id is not needed when creating a new book, it will be assigned automatically.", default=None)
     title: str = Field(min_length=1, max_length=100)
     author: str = Field(min_length=1, max_length=50)
     category: str = Field(min_length=1, max_length=50)
     description: str = Field(min_length=1, max_length=500)
     rating: float = Field(gt=0, le=5) # ge means greater than or equal to, le means less than or equal to
  # This line is used to rebuild the model after adding the new fields. This is necessary because we are using the BaseModel from Pydantic, which does not allow us to add new fields after the model has been defined. By calling model_rebuild(), we can add new fields to the model and it will be able to validate the data correctly.
-
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "title": "The Great Gatsby",
+                "author": "F. Scott Fitzgerald",
+                "category": "Fiction",
+                "description": "A novel set in the Roaring Twenties that tells the story of Jay Gatsby and his unrequited love for Daisy Buchanan.",
+                "rating": 4.5
+            }
+        }
+    }
 
 BOOKS = [
     Book(1, "The Great Gatsby", "F. Scott Fitzgerald", "Fiction", "A novel set in the Roaring Twenties that tells the story of Jay Gatsby and his unrequited love for Daisy Buchanan.", 4.5),
@@ -43,12 +53,29 @@ BOOKS = [
 def get_all_books():
     return BOOKS 
 
+@app.get("/books/{book_id}")
+def get_book_by_id(book_id: int):
+    for book in BOOKS:
+        if book.id == book_id:
+            return book
+    return {"message": f"Book with id {book_id} not found."}
+
+@app.get("/books/rating/{rating}")
+def get_books_by_rating(rating: float):
+    books_by_rating = []
+    for book in BOOKS:
+        if book.rating == rating:
+            books_by_rating.append(book)
+    if len(books_by_rating) == 0:
+        return {"message": f"No books found with rating {rating}."}
+    return books_by_rating
+
 @app.post("/books/create_book")
 def add_book(book_req: BookRequest):
     # This line creates a new Book object using the data from the BookRequest model and appends it to the BOOKS list.
     new_book = Book(**book_req.dict()) # This line creates a new Book object using the data from the BookRequest model. The ** operator is used to unpack the dictionary returned by book_req.dict() into keyword arguments for the Book constructor.
     BOOKS.append(find_book_id(new_book)) # This line appends the new Book object to the BOOKS list after assigning it a unique ID using the find_book_id function.) 
-    return {"message": f"Book with title {book_req.title} has been added.", "book": new_book}y
+    return {"message": f"Book with title {book_req.title} has been added.", "book": new_book}
 
 
 def find_book_id(book: Book):
