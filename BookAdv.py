@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path, Query
 from pydantic import BaseModel, Field
+from datetime import datetime
 from typing import Optional
 # to run type in terminal: uvicorn BookAdv:app --reload
 
@@ -30,7 +31,7 @@ class BookRequest(BaseModel):
     category: str = Field(min_length=1, max_length=50)
     description: str = Field(min_length=1, max_length=500)
     rating: float = Field(gt=0, le=5) # ge means greater than or equal to, le means less than or equal to
-    published_date: int = Field(gt=0)
+    published_date: int = Field(gt=1000, le=datetime.now().year) # gt means greater than, le means less than or equal to. CurrentYear is a variable that holds the current year, which is used to validate the published_date field.
  # This line is used to rebuild the model after adding the new fields. This is necessary because we are using the BaseModel from Pydantic, which does not allow us to add new fields after the model has been defined. By calling model_rebuild(), we can add new fields to the model and it will be able to validate the data correctly.
     model_config = {
         "json_schema_extra": {
@@ -58,14 +59,14 @@ def get_all_books():
     return BOOKS 
 
 @app.get("/books/{book_id}")
-def get_book_by_id(book_id: int):
+def get_book_by_id(book_id: int = Path(gt=0, description="The ID of the book to retrieve. Must be a positive integer.")):
     for book in BOOKS:
         if book.id == book_id:
             return book
     return {"message": f"Book with id {book_id} not found."}
 
 @app.get("/books/rating/{rating}")
-def get_books_by_rating(rating: float):
+def get_books_by_rating(rating: float = Path(gt=0, le=5, description="The rating of the books to retrieve. Must be a float between 0 and 5.")):
     books_by_rating = []
     for book in BOOKS:
         if book.rating == rating:
@@ -75,7 +76,7 @@ def get_books_by_rating(rating: float):
     return books_by_rating
 
 @app.get("/books/published_date/{year}")
-def get_books_by_published_date(year: int):
+def get_books_by_published_date(year: int = Path(gt=1000, le=datetime.now().year, description="The year the books were published. Must be a positive integer.")):
     books_by_year = []
     for book in BOOKS:
         if book.published_date == year:
@@ -92,15 +93,15 @@ def add_book(book_req: BookRequest):
     return {"message": f"Book with title {book_req.title} has been added.", "book": new_book}
 
 @app.put("/books/update_book/")
-def update_book(book_req: BookRequest):
+def update_book(book_req: BookRequest, book_id: int = Query(gt=0, le=datetime.now().year, description="The ID of the book to update. Must be a positive integer.")):
     for i in range(len(BOOKS)):
-        if BOOKS[i].id == book_req.id:
+        if BOOKS[i].id == book_id:
             BOOKS[i] = Book(**book_req.dict())
-            return {"message": f"Book with id {book_req.id} has been updated.", "book": BOOKS[i]}
-    return {"message": f"Book with id {book_req.id} not found."}
+            return {"message": f"Book with id {book_id} has been updated.", "book": BOOKS[i]}
+    return {"message": f"Book with id {book_id} not found."}
 
 @app.delete("/books/delete_book/{book_id}")
-def delete_book(book_id: int):
+def delete_book(book_id: int = Path(gt=0, description="The ID of the book to delete. Must be a positive integer.")):
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book_id:
             deleted_book = BOOKS.pop(i)
