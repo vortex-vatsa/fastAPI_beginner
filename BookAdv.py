@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, HttpException
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
@@ -63,7 +63,7 @@ def get_book_by_id(book_id: int = Path(gt=0, description="The ID of the book to 
     for book in BOOKS:
         if book.id == book_id:
             return book
-    return {"message": f"Book with id {book_id} not found."}
+    raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found.")
 
 @app.get("/books/rating/{rating}")
 def get_books_by_rating(rating: float = Path(gt=0, le=5, description="The rating of the books to retrieve. Must be a float between 0 and 5.")):
@@ -94,20 +94,27 @@ def add_book(book_req: BookRequest):
 
 @app.put("/books/update_book/")
 def update_book(book_req: BookRequest, book_id: int = Query(gt=0, le=datetime.now().year, description="The ID of the book to update. Must be a positive integer.")):
+    book_changed = False
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book_id:
             BOOKS[i] = Book(**book_req.dict())
+            book_changed = True
             return {"message": f"Book with id {book_id} has been updated.", "book": BOOKS[i]}
-    return {"message": f"Book with id {book_id} not found."}
+    if not book_changed:
+        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found.")
 
 @app.delete("/books/delete_book/{book_id}")
 def delete_book(book_id: int = Path(gt=0, description="The ID of the book to delete. Must be a positive integer.")):
+    book_deleted = False
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book_id:
             deleted_book = BOOKS.pop(i)
+            book_deleted = True
             return {"message": f"Book with id {book_id} has been deleted.", "book": deleted_book}
-    return {"message": f"Book with id {book_id} not found."}
+    if not book_deleted:
+        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found.")
 
 def find_book_id(book: Book):
     book.id = 1 if len(BOOKS) == 0 else BOOKS[-1].id + 1 # This line assigns a unique ID to the new book. If the BOOKS list is empty, it assigns an ID of 1. Otherwise, it takes the ID of the last book in the list and adds 1 to it.
     return book
+
