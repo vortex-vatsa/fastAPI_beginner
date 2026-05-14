@@ -109,10 +109,8 @@ def delete_book(book_id: int = Path(gt=0, description="The ID of the book to del
     for i in range(len(BOOKS)):
         if BOOKS[i].id == book_id:
             deleted_book = BOOKS.pop(i)
-            book_deleted = True
             return {"message": f"Book with id {book_id} has been deleted.", "book": deleted_book}
-    if not book_deleted:
-        raise HTTPException(status_code=404, detail=f"Book with id {book_id} not found.")
+    return {"message": f"Book with id {book_id} not found."}
 
 def find_book_id(book: Book):
     book.id = 1 if len(BOOKS) == 0 else BOOKS[-1].id + 1 # This line assigns a unique ID to the new book. If the BOOKS list is empty, it assigns an ID of 1. Otherwise, it takes the ID of the last book in the list and adds 1 to it.
